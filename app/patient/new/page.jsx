@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import jsPDF from "jspdf";
 import Navbar from "@/app/components/Navbar";
+import { useEffect, useState } from "react";
+
 
 /* ================= INITIAL STATE ================= */
 
@@ -30,6 +31,25 @@ export default function NewPatientPage() {
   const [error, setError] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchNextMedicalRecord = async () => {
+  try {
+    const res = await fetch("/api/patient/next-record");
+    const data = await res.json();
+
+    setForm((prev) => ({
+      ...prev,
+      medicalRecord: data.medicalRecord,
+    }));
+  } catch {
+    console.error("Failed to fetch medical record");
+  }
+  };
+
+  useEffect(() => {
+    fetchNextMedicalRecord();
+  }, []);
+
 
   /* ================= HANDLE CHANGE ================= */
 
@@ -76,10 +96,11 @@ export default function NewPatientPage() {
     }
 
     try {
+      const { medicalRecord, ...payload } = form;
       const res = await fetch("/api/patient", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(form), // ⬅️ KIRIM SEMUA TERMASUK medicalRecord
       });
 
       if (!res.ok) throw new Error("Failed to save data");
@@ -143,7 +164,7 @@ export default function NewPatientPage() {
 
           <form onSubmit={handleSubmit} style={formGrid}>
             <Input label="Full Name *" name="fullName" value={form.fullName} onChange={handleChange} error={error.fullName} />
-            <Input label="Medical Records Number" name="medicalRecord" value={form.medicalRecord} onChange={handleChange} />
+            <Input label="Medical Records Number" name="medicalRecord" value={form.medicalRecord} disabled />
 
             <Input label="NIK *" name="nik" maxLength={16} value={form.nik} onChange={handleChange} error={error.nik} />
             <Input label="Mother's Name" name="motherName" value={form.motherName} onChange={handleChange} />
@@ -152,10 +173,10 @@ export default function NewPatientPage() {
             <Input label="Date of Birth *" name="birthDate" type="date" value={form.birthDate} onChange={handleChange} error={error.birthDate} />
 
             <Select label="Gender *" name="gender" value={form.gender} options={["Male", "Female"]} onChange={handleChange} error={error.gender} />
-            <Select label="Religion *" name="religion" value={form.religion} options={["Islam", "Christian"]} onChange={handleChange} error={error.religion} />
+            <Select label="Religion *" name="religion" value={form.religion} options={["Islam", "Christian", "Catholic", "Hinduism", "Buddha", "Khonghucu"]} onChange={handleChange} error={error.religion} />
 
             <Input label="Telephone Number *" name="phone" value={form.phone} onChange={handleChange} error={error.phone} />
-            <Select label="Specialist Clinic *" name="clinic" value={form.clinic} options={["General", "Dental", "Pediatric"]} onChange={handleChange} error={error.clinic} />
+            <Select label="Specialist Clinic *" name="clinic" value={form.clinic} options={["General", "Dental", "Pediatric", "Neurologist", "Orthopedic", "Urologist", "Cardiologist", "Dermatologist", "Obstetrician"]} onChange={handleChange} error={error.clinic} />
 
             <div style={actionRow}>
               <button type="button" style={btnSecondary} onClick={() => router.push("/dashboard")}>
@@ -195,11 +216,26 @@ export default function NewPatientPage() {
 
 /* ================= COMPONENTS ================= */
 
-function Input({ label, name, value, onChange, error, ...props }) {
+
+
+
+
+function Input({ label, name, value, onChange, error, disabled, ...props }) {
   return (
     <div>
       <label style={labelStyle}>{label}</label>
-      <input name={name} value={value} onChange={onChange} style={inputStyle} {...props} />
+      <input
+        name={name}
+        value={value ?? ""}
+        onChange={onChange}
+        disabled={disabled}
+        style={{
+          ...inputStyle,
+          backgroundColor: disabled ? "#f3f4f6" : "#fff",
+          cursor: disabled ? "not-allowed" : "text",
+        }}
+        {...props}
+      />
       {error && <p style={errorText}>{error}</p>}
     </div>
   );

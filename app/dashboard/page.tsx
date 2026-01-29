@@ -10,8 +10,16 @@ export default function DashboardPage() {
   const [patients, setPatients] = useState([]);
 
   useEffect(() => {
+    const isLoggedIn = localStorage.getItem("isLoggedIn");
+
+    if (!isLoggedIn) {
+      router.replace("/login");
+      return;
+    }
+
     fetchPatients();
   }, []);
+
 
   async function fetchPatients() {
     const { data, error } = await supabase
@@ -67,10 +75,14 @@ export default function DashboardPage() {
           <span className="user">Nandytha Z Putri</span>
           <button
             className="logout"
-            onClick={() => router.push("/login")}
+              onClick={() => {
+              localStorage.removeItem("isLoggedIn");
+              router.push("/login");
+            }}
           >
             Logout
           </button>
+
         </div>
       </header>
 
@@ -102,7 +114,6 @@ export default function DashboardPage() {
           <table>
             <thead>
               <tr>
-                <th>No</th>
                 <th>No MR</th>
                 <th>Patient Name</th>
                 <th>Gender</th>
@@ -124,7 +135,6 @@ export default function DashboardPage() {
 
               {patients.map((p, i) => (
                 <tr key={p.id}>
-                  <td>{i + 1}</td>
                   <td>{p.medical_record}</td>
                   <td>{p.full_name}</td>
                   <td>{p.gender || "-"}</td>

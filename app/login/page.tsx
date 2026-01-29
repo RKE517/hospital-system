@@ -11,14 +11,17 @@ export default function LoginPage() {
   // 🔑 HANDLE LOGIN
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("LOGIN CLICKED", username, password);
 
-    if (username === "admin" && password === "admin") {
+    if (username === "Nandytha" && password === "admin") {
+      // ✅ SIMPAN STATUS LOGIN
+      localStorage.setItem("isLoggedIn", "true");
+
       router.push("/dashboard");
     } else {
       alert("Username atau Password salah");
     }
   };
+
 
   return (
     <div className="login-page">

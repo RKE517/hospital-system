@@ -95,7 +95,7 @@ export default function EditPatientPage() {
 
           <form onSubmit={handleSubmit} style={formGrid}>
             <Input label="Full Name *" name="fullName" value={form.fullName} onChange={handleChange} />
-            <Input label="Medical Records Number" name="medicalRecord" value={form.medicalRecord} onChange={handleChange} />
+            <Input label="Medical Records Number" name="medicalRecord" value={form.medicalRecord} disabled />
 
             <Input label="NIK *" name="nik" maxLength={16} value={form.nik} onChange={handleChange} />
             <Input label="Mother's Name" name="motherName" value={form.motherName} onChange={handleChange} />
@@ -104,10 +104,10 @@ export default function EditPatientPage() {
             <Input label="Date of Birth *" name="birthDate" type="date" value={form.birthDate} onChange={handleChange} />
 
             <Select label="Gender *" name="gender" value={form.gender} options={["Male", "Female"]} onChange={handleChange} />
-            <Select label="Religion *" name="religion" value={form.religion} options={["Islam", "Christian"]} onChange={handleChange} />
+            <Select label="Religion *" name="religion" value={form.religion} options={["Islam", "Christian", "Catholic", "Hinduism", "Buddha", "Khonghucu"]} onChange={handleChange} />
 
             <Input label="Telephone Number *" name="phone" value={form.phone} onChange={handleChange} />
-            <Select label="Specialist Clinic *" name="clinic" value={form.clinic} options={["General", "Dental", "Pediatric"]} onChange={handleChange} />
+            <Select label="Specialist Clinic *" name="clinic" value={form.clinic} options={["General", "Dental", "Pediatric", "Neurologist", "Orthopedic", "Urologist", "Cardiologist", "Dermatologist", "Obstetrician"]} onChange={handleChange} />
 
             {/* ACTION BUTTON */}
             <div style={actionRow}>
@@ -134,7 +134,7 @@ export default function EditPatientPage() {
 
 /* ================= COMPONENTS ================= */
 
-function Input({ label, name, value, onChange, ...props }) {
+function Input({ label, name, value, onChange, disabled, ...props }) {
   return (
     <div>
       <label style={labelStyle}>{label}</label>
@@ -142,12 +142,18 @@ function Input({ label, name, value, onChange, ...props }) {
         name={name}
         value={value || ""}
         onChange={onChange}
-        style={inputStyle}
+        disabled={disabled}
+        style={{
+          ...inputStyle,
+          backgroundColor: disabled ? "#f3f4f6" : "#fff",
+          cursor: disabled ? "not-allowed" : "text",
+        }}
         {...props}
       />
     </div>
   );
 }
+
 
 function Select({ label, name, value, options, onChange }) {
   return (
