@@ -6,8 +6,10 @@ import { supabase } from "@/lib/supabase";
 import jsPDF from "jspdf";
 
 export default function DashboardPage() {
+  const [search, setSearch] = useState("");
   const router = useRouter();
-  const [patients, setPatients] = useState([]);
+  const [patients, setPatients] = useState<any[]>([]);
+  
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn");
@@ -25,10 +27,21 @@ export default function DashboardPage() {
     const { data, error } = await supabase
       .from("patients")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("medical_record", { ascending: true });
 
     if (!error) setPatients(data || []);
   }
+
+  const filteredPatients = patients.filter((patient) => {
+    const keyword = search.toLowerCase();
+
+    return (
+      patient.full_name?.toLowerCase().includes(keyword) ||
+      patient.medical_record?.toLowerCase().includes(keyword) ||
+      patient.clinic?.toLowerCase().includes(keyword)
+    );
+  });
+
 
   async function handleDelete(id) {
     const confirmDelete = confirm("Delete this patient?");
@@ -39,26 +52,83 @@ export default function DashboardPage() {
   }
 
   function handlePrint(patient) {
-    const pdf = new jsPDF();
-    pdf.setFontSize(16);
-    pdf.text("HOSPITAL MANAGEMENT SYSTEM", 20, 20);
+  const pdf = new jsPDF("p", "mm", "a4");
 
-    pdf.setFontSize(12);
-    pdf.text("Patient Registration Data", 20, 30);
+  const centerX = 105;
+  let y = 25;
 
-    pdf.text(`Name: ${patient.full_name}`, 20, 50);
-    pdf.text(`Medical Record No: ${patient.medical_record}`, 20, 60);
-    pdf.text(`NIK: ${patient.nik}`, 20, 70);
-    pdf.text(`Mother's Name: ${patient.mother_name}`, 20, 80);
-    pdf.text(`Birth Place: ${patient.birth_place}`, 20, 90);
-    pdf.text(`Date of Birth: ${patient.birth_date}`, 20, 100);
-    pdf.text(`Gender: ${patient.gender}`, 20, 110);
-    pdf.text(`Religion: ${patient.religion}`, 20, 120);
-    pdf.text(`Telephone: ${patient.phone}`, 20, 130);
-    pdf.text(`Clinic: ${patient.clinic}`, 20, 140);
+  // ===== HEADER =====
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(14);
+  pdf.text("Hospital X South Africa", centerX, y, { align: "center" });
 
-    pdf.save(`patient-${patient.id}.pdf`);
-  }
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(10);
+  y += 7;
+  pdf.text(
+    "76 Maude Street, Corner West Street, Sandton, 2196, Johannesburg",
+    centerX,
+    y,
+    { align: "center" }
+  );
+
+  y += 6;
+  pdf.text("Phone +27 21 XXX XXXX", centerX, y, { align: "center" });
+
+  // Line
+  y += 6;
+  pdf.line(30, y, 180, y);
+
+  // ===== TITLE =====
+  y += 14;
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(12);
+  pdf.text("E-Ticket Registration", centerX, y, { align: "center" });
+
+  // ===== CONTENT =====
+  y += 14;
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(11);
+
+  const labelX = 45;
+  const colonX = 95;
+  const valueX = 100;
+
+  const row = (label, value) => {
+    pdf.text(label, labelX, y);
+    pdf.text(":", colonX, y);
+    pdf.text(String(value ?? "-"), valueX, y);
+    y += 8;
+  };
+
+  row("Registration Number", patient.registration_number);
+  row("Patient Name", patient.full_name);
+  row("Identification Number", patient.nik);
+  row("Medical Record Number", patient.medical_record);
+  row("Gender", patient.gender);
+  row("Mother Name", patient.mother_name);
+  row("Date of Birth", patient.birth_date);
+  row("Phone Number", patient.phone);
+  row("Date of Entry", new Date(patient.created_at).toLocaleDateString());
+  row("Specialist", patient.clinic);
+
+  // ===== FOOTER =====
+  y += 10;
+  pdf.line(30, y, 180, y);
+
+  y += 10;
+  pdf.setFontSize(10);
+  pdf.text(
+    "Registered at Hospital X, according to the data above",
+    centerX,
+    y,
+    { align: "center" }
+  );
+
+  // ===== SAVE =====
+  pdf.save(`E-Ticket-${patient.registration_number}.pdf`);
+}
+
 
   return (
     <div className="dashboard">
@@ -108,33 +178,40 @@ export default function DashboardPage() {
           </div>
 
           {/* SEARCH */}
-          <input className="search" placeholder="Search Patient" />
+          <input
+            className="search"
+            placeholder="Search Patient"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
 
           {/* TABLE */}
           <table>
             <thead>
               <tr>
+                <th>No Registration</th>
                 <th>No MR</th>
                 <th>Patient Name</th>
                 <th>Gender</th>
                 <th>Birth Date</th>
-
                 <th>Specialist Clinic</th>
                 <th>Action</th>
               </tr>
             </thead>
 
             <tbody>
-              {patients.length === 0 && (
+              {filteredPatients.length === 0 && (
                 <tr>
-                  <td colSpan="8" className="empty">
+                  <td colSpan={6} className="empty">
                     No data available
                   </td>
                 </tr>
               )}
 
-              {patients.map((p, i) => (
+              {filteredPatients.map((p, i) => (
                 <tr key={p.id}>
+                  <td>{p.registration_number}</td>
                   <td>{p.medical_record}</td>
                   <td>{p.full_name}</td>
                   <td>{p.gender || "-"}</td>

@@ -115,34 +115,87 @@ export default function NewPatientPage() {
 
   /* ================= PDF ================= */
 
-  const handlePrintPDF = () => {
-    const doc = new jsPDF();
+  const handlePrintPDF = (patient) => {
+    const doc = new jsPDF("p", "mm", "a4");
 
-    doc.setFontSize(16);
-    doc.text("HOSPITAL MANAGEMENT SYSTEM", 20, 20);
+    const centerX = 105;
+    let y = 25;
 
+  // ===== HEADER =====
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("Hospital X South Africa", centerX, y, { align: "center" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    y += 7;
+    doc.text(
+      "76 Maude Street, Corner West Street, Sandton, 2196, Johannesburg",
+      centerX,
+      y,
+      { align: "center" }
+    );
+
+    y += 6;
+    doc.text("Phone +27 21 XXX XXXX", centerX, y, { align: "center" });
+
+    // Line
+    y += 6;
+    doc.line(30, y, 180, y);
+
+    // ===== TITLE =====
+    y += 14;
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
-    doc.text("Patient Registration Data", 20, 30);
+    doc.text("E-Ticket Registration", centerX, y, { align: "center" });
 
-    let y = 45;
+    // ===== CONTENT =====
+    y += 14;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+
+    const labelX = 45;
+    const colonX = 95;
+    const valueX = 100;
+
     const row = (label, value) => {
-      doc.text(`${label} : ${value || "-"}`, 20, y);
+      doc.text(label, labelX, y);
+      doc.text(":", colonX, y);
+      doc.text(String(value ?? "-"), valueX, y);
       y += 8;
     };
 
-    row("Full Name", form.fullName);
-    row("Medical Record No", form.medicalRecord);
-    row("NIK", form.nik);
-    row("Mother's Name", form.motherName);
-    row("Birth Place", form.birthPlace);
-    row("Date of Birth", form.birthDate);
-    row("Gender", form.gender);
-    row("Religion", form.religion);
-    row("Telephone", form.phone);
-    row("Clinic", form.clinic);
+    row("Registration Number", patient.registration_number);
+    row("Patient Name", patient.full_name);
+    row("Identification Number", patient.nik);
+    row("Medical Record Number", patient.medical_record);
+    row("Gender", patient.gender);
+    row("Mother Name", patient.mother_name);
+    row("Date of Birth", patient.birth_date);
+    row("Phone Number", patient.phone);
+    row(
+      "Date of Entry",
+      new Date(patient.created_at).toLocaleDateString("en-GB")
+    );
+    row("Specialist", patient.clinic);
 
-    doc.save(`patient-${form.nik}.pdf`);
-  };
+    // ===== FOOTER =====
+    y += 10;
+    doc.line(30, y, 180, y);
+
+    y += 10;
+    doc.setFontSize(10);
+    doc.text(
+      "Registered at Hospital X, according to the data above",
+      centerX,
+      y,
+      { align: "center" }
+    );
+
+  // ===== SAVE =====
+  doc.save(`E-Ticket-${patient.registration_number}.pdf`);
+};
+
 
   const resetAll = () => {
     setForm(initialForm);
@@ -203,8 +256,9 @@ export default function NewPatientPage() {
               <p style={{ marginBottom: 20 }}>Data saved successfully</p>
 
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <button style={btnSecondary} onClick={resetAll}>Back</button>
-                <button style={btnPrimary} onClick={handlePrintPDF}>Print</button>
+                <button style={btnSecondary} onClick={() => router.push("/dashboard")}>Back</button>
+                <button style={btnPrimary} onClick={async () => {resetAll(); await fetchNextMedicalRecord(); }}>Next</button>
+
               </div>
             </div>
           </div>,
